@@ -5,7 +5,6 @@ from rich.screen import Screen
 from rich.console import Console, RenderGroup
 from rich.align import Align
 import box_interface
-from client import exit_client
 from utils import User, Preferences, GoBack, clear
 from rendering import render_menu_screen, message_demo
 import login
