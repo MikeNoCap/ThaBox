@@ -96,24 +96,44 @@ async def console_loop():
         clear()
         await asyncio.sleep(0.01)
 
-    while True and CONNECTED:
-        console.print("Tip: Hold space to type")
-        await asyncio.sleep(2)
-        if keyboard.is_pressed("space"):
+    cancel_render = False
+    while CONNECTED:
+        if not cancel_render:
+            console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+            console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
+        else:
+            cancel_render = False
+        wait = True
+        while wait:
+            if keyboard.is_pressed("alt gr+space"):
+                event = "msg"
+                break
+            if keyboard.is_pressed("alt gr+c"):
+                event = "return"
+                break
+            global messages_to_show
+            if len(messages_to_show) != 0:
+                clear()
+                index_of_i = -1
+                for i in messages_to_show:
+                    index_of_i += 1
+                    with Live("", refresh_per_second=14) as live:
+                        render_user = User(i[0], "NotImportant", preferences=user.preferences)
+                        rendering.render_message(i[1], render_user, live=live)
+                        messages_to_show.pop(index_of_i)
+                clear()
+                console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
+                
+            await asyncio.sleep(0.2)
+        if event == "msg":
+            clear()
             message = rendering.prompt(user)
             await asyncio.sleep(0.01)
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
-        global messages_to_show
-        if len(messages_to_show) != 0:
-            clear()
-            index_of_i = -1
-            for i in messages_to_show:
-                index_of_i += 1
-                with Live("", refresh_per_second=14) as live:
-                    render_user = User(i[0], "NotImportant", preferences=user.preferences)
-                    rendering.render_message(i[1], render_user, live=live)
-                    messages_to_show.pop(index_of_i)
-        clear()
+            cancel_render = True
+        if event == "return":
+            return await console_loop(user)
 
 if __name__ == "__main__":
     asyncio.run(main())
