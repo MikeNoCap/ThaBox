@@ -1,10 +1,10 @@
 # Server
 import socketio
-from fastapi import FastAPI
 
 sio = socketio.AsyncServer(async_mode="asgi", ping_interval=16, ping_timeout=60)
-fast_app = FastAPI()
-sio.attach(fast_app)
+app = socketio.ASGIApp(sio)
+
+
 
 users = []
 rooms = []
