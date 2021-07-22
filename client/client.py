@@ -97,7 +97,7 @@ async def console_loop():
         await asyncio.sleep(0.01)
 
     cancel_render = False
-    while CONNECTED:
+    while True:
         if not cancel_render:
             console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
             console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
