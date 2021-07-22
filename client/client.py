@@ -85,7 +85,7 @@ async def ping_server():
 async def console_loop():
     global messages_to_show
     # TODO: log the user in/make an account
-    if CONNECTED:
+    if True:
         user = main_navigation.main_menu(logged_in=False, logged_in_as=None)
         globals().update(USERNAME=user.username)
         console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
