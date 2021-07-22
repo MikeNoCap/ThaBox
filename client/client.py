@@ -108,6 +108,7 @@ async def console_loop(user=None):
         if not ROOM_WORKS:
             await sio.emit("join_room", {"username": user.username, "room_name": name})
             globals().update(ROOM_WORKS=True)
+            print("RECONNECT")
         if not cancel_render:
             console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
             console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
@@ -118,6 +119,7 @@ async def console_loop(user=None):
             if not ROOM_WORKS:
                 await sio.emit("join_room", {"username": user.username, "room_name": name})
                 globals().update(ROOM_WORKS=True)
+                print("RECONNECT")
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"
                 break
