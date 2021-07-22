@@ -82,11 +82,14 @@ async def ping_server():
     await sio.emit("keep_alive")
 
 
-async def console_loop():
+async def console_loop(user=None):
     global messages_to_show
     # TODO: log the user in/make an account
     if True:
-        user = main_navigation.main_menu(logged_in=False, logged_in_as=None)
+        if user is None:
+            user = main_navigation.main_menu(logged_in=False, logged_in_as=None)
+        if user is not None:
+            user = main_navigation.main_menu(logged_in=True, logged_in_as=user)
         globals().update(USERNAME=user.username)
         console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
         name = Prompt.ask(Text.assemble(("╰>", user.preferences.preference_dict["Border Colour"])))
@@ -108,7 +111,7 @@ async def console_loop():
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"
                 break
-            if keyboard.is_pressed("alt gr+v"):
+            if keyboard.is_pressed("alt gr+c"):
                 event = "return"
                 break
             global messages_to_show
@@ -123,7 +126,7 @@ async def console_loop():
                         messages_to_show.pop(index_of_i)
                 clear()
                 console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
-                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+V to go back to main-menu.")
+                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
                 
             await asyncio.sleep(0.2)
         if event == "msg":
