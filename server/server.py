@@ -1,10 +1,10 @@
 # Server
 import socketio
-from aiohttp import web
+from fastapi import FastAPI
 
-sio = socketio.AsyncServer(async_mode="aiohttp", ping_interval=16, ping_timeout=60)
-app = web.Application()
-sio.attach(app)
+sio = socketio.AsyncServer(async_mode="asgi", ping_interval=16, ping_timeout=60)
+fast_app = FastAPI()
+sio.attach(fast_app)
 
 users = []
 rooms = []
@@ -66,5 +66,4 @@ async def keep_alive(sid):
     print(f"[SERVER]: {sid} pinging server...")
     return "OK"
 
-if __name__ == "__main__":
-    web.run_app(app)
+
