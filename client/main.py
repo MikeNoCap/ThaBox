@@ -150,8 +150,7 @@ def main_menu(logged_in: bool = False, logged_in_as=None):
                         continue
                 elif hover_on == 5:
                     clear()
-                    # exit()  # Replaced by exit function in client so the socket connection is properly closed.
-                    exit_client()
+                    exit()  # Replaced by exit function in client so the socket connection is properly closed.
 
             if hover_on == 1:
                 clear()
