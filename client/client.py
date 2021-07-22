@@ -115,7 +115,6 @@ async def console_loop(user=None):
             cancel_render = False
         wait = True
         while wait:
-            global ROOM_WORKS
             if not ROOM_WORKS:
                 await sio.emit("join_room", {"username": user.username, "room_name": name})
                 globals().update(ROOM_WORKS=True)
