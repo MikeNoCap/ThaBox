@@ -108,7 +108,7 @@ async def console_loop():
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"
                 break
-            if keyboard.is_pressed("alt gr+c"):
+            if keyboard.is_pressed("alt gr+v"):
                 event = "return"
                 break
             global messages_to_show
@@ -123,7 +123,7 @@ async def console_loop():
                         messages_to_show.pop(index_of_i)
                 clear()
                 console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
-                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
+                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+V to go back to main-menu.")
                 
             await asyncio.sleep(0.2)
         if event == "msg":
