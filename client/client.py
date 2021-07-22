@@ -65,9 +65,9 @@ async def send_message(sid, data):
 
 @sio.event
 async def receive_message(data):
-    global messages_to_show
-    messages_to_show.append([data["username"], data["message"]])
-    print(f"{data['username']}-{data['message']}")
+    global messages_to_show, ROOM
+    if data["room_name"] == ROOM:
+        messages_to_show.append([data["username"], data["message"]])
 
 
 async def main():
