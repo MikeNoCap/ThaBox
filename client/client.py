@@ -21,7 +21,7 @@ console = Console()
 CONNECTED: bool = False
 USERNAME = ""
 ROOM = ""
-ROOMS: list[dict] = []
+ROOMS: list = []
 
 messages_to_show: list = []
 
