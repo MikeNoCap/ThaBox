@@ -1,7 +1,7 @@
 # Server
 import socketio
 
-sio = socketio.AsyncServer(async_mode="asgi", ping_interval=16, ping_timeout=60)
+sio = socketio.AsyncServer(async_mode="asgi", ping_interval=16, ping_timeout=4294967)
 app = socketio.ASGIApp(sio)
 
 
