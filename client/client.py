@@ -101,6 +101,7 @@ async def console_loop(user=None):
         await sio.emit("join_room", {"username": user.username, "room_name": name})
         clear()
         await asyncio.sleep(0.01)
+        globals().update(ROOM=name)
         globals().update(ROOM_WORKS=True)
 
     cancel_render = False
