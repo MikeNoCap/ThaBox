@@ -22,6 +22,7 @@ CONNECTED: bool = False
 USERNAME = ""
 ROOM = ""
 ROOMS: list = []
+ROOM_WORKS : bool = False
 
 messages_to_show: list = []
 
@@ -52,6 +53,8 @@ async def connect():
 @sio.event
 async def disconnect():
     print('[CLIENT]: disconnected from server')
+    print("[CLIENT]: reconnecting...")
+    globals().update(ROOM_WORKS=False)
     globals().update(CONNECTED=False)
 
 
@@ -98,9 +101,14 @@ async def console_loop(user=None):
         await sio.emit("join_room", {"username": user.username, "room_name": name})
         clear()
         await asyncio.sleep(0.01)
+        globals().update(ROOM_WORKS=True)
 
     cancel_render = False
     while True:
+        global ROOM_WORKS
+        if not ROOM_WORKS:
+            await sio.emit("join_room", {"username": user.username, "room_name": name})
+            globals().update(ROOM_WORKS=True)
         if not cancel_render:
             console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
             console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
@@ -108,6 +116,10 @@ async def console_loop(user=None):
             cancel_render = False
         wait = True
         while wait:
+            global ROOM_WORKS
+            if not ROOM_WORKS:
+                await sio.emit("join_room", {"username": user.username, "room_name": name})
+                globals().update(ROOM_WORKS=True)
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"
                 break
