@@ -39,6 +39,32 @@ def set_rooms(data):
 async def get_rooms():
     await sio.emit("get_rooms", callback=set_rooms)
 
+async def check_connection():
+    if not ROOM_WORKS: # Check if connection was lost to reconnect if it was.
+        console.print(Panel("Your connection was lost.", style="bold yellow", border_style="bold yellow"))
+        console.print(Panel("Reconnecting...", style="bold yellow", border_style="bold yellow"))
+            
+        loop_count = 0 # Store loop-count to cancel reconnect if it exceeds time-limit.
+        feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+        reconnecting = True
+        while reconnecting:
+            await asyncio.sleep(1)
+                
+            loop_count += 1
+            if loop_count == 11:
+                break
+
+            try:
+                await sio.emit("join_room", {"username": user.username, "room_name": name})
+            except Exception as e:
+                print(e)
+                continue
+                
+            feedback = Panel("Back online!", style="bold green", border_style="bold green")
+            reconnecting = False
+            globals().update(ROOM_WORKS=True)
+        console.print(feedback)
+
 
 def get_room_data():
     return ROOMS
@@ -46,21 +72,19 @@ def get_room_data():
 
 @sio.event
 async def connect():
-    print('[CLIENT]: connected to server')
+    console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     globals().update(CONNECTED=True)
 
 
 @sio.event
 async def disconnect():
-    print('[CLIENT]: disconnected from server')
-    print("[CLIENT]: reconnecting...")
     globals().update(ROOM_WORKS=False)
     globals().update(CONNECTED=False)
 
 
 @sio.event
 async def send_message(sid, data):
-    print(f'[CLIENT]: message sent {sid}, data: {data}')
+    return #print(f'[CLIENT]: message sent {sid}, data: {data}')
 
 
 @sio.event
@@ -71,13 +95,15 @@ async def receive_message(data):
 
 
 async def main():
-    print("[CLIENT]: Starting connection...")
+    console.print(Panel("Starting connection...", style="bold yellow", border_style="bold yellow"))
     try:
         await sio.connect('http://thabox.asmul.net:8000')
     except ConnectionError as e:
         print("[CLIENT]: could not connect to server, please restart the application.")
-    await asyncio.sleep(2)
-    print("[CLIENT]: Running console...")
+
+    
+    console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
+    await asyncio.sleep(3)
     await console_loop()
 
 
@@ -94,37 +120,35 @@ async def console_loop(user=None):
         if user is not None:
             user = main_navigation.main_menu(logged_in=True, logged_in_as=user)
         globals().update(USERNAME=user.username)
+
+
         console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
         name = Prompt.ask(Text.assemble(("╰>", user.preferences.preference_dict["Border Colour"])))
         console.print(Panel(f"Joining {name}", style="green", border_style="green"))
-
         await sio.emit("join_room", {"username": user.username, "room_name": name})
-        clear()
-        await asyncio.sleep(0.01)
         globals().update(ROOM=name)
         globals().update(ROOM_WORKS=True)
+        await asyncio.sleep(0.01)
+        clear()
+        
+        
 
     cancel_render = False
     while True:
-        if not ROOM_WORKS:
-            print("RECONNECTING...")
-            await asyncio.sleep(3)
-            await sio.emit("join_room", {"username": user.username, "room_name": name})
-            globals().update(ROOM_WORKS=True)
-            print("RECONNECT")
         if not cancel_render:
             console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
             console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
         else:
             cancel_render = False
+
+        
         wait = True
         while wait:
-            if not ROOM_WORKS:
-                print("RECONNECTING...")
+            if not ROOM_WORKS: # Check if connection was lost to reconnect if it was.
                 await asyncio.sleep(3)
                 await sio.emit("join_room", {"username": user.username, "room_name": name})
                 globals().update(ROOM_WORKS=True)
-                print("RECONNECT")
+            
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"
                 break
