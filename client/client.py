@@ -39,31 +39,7 @@ def set_rooms(data):
 async def get_rooms():
     await sio.emit("get_rooms", callback=set_rooms)
 
-async def check_connection():
-    if not ROOM_WORKS: # Check if connection was lost to reconnect if it was.
-        console.print(Panel("Your connection was lost.", style="bold yellow", border_style="bold yellow"))
-        console.print(Panel("Reconnecting...", style="bold yellow", border_style="bold yellow"))
-            
-        loop_count = 0 # Store loop-count to cancel reconnect if it exceeds time-limit.
-        feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
-        reconnecting = True
-        while reconnecting:
-            await asyncio.sleep(1)
-                
-            loop_count += 1
-            if loop_count == 11:
-                break
 
-            try:
-                await sio.emit("join_room", {"username": user.username, "room_name": name})
-            except Exception as e:
-                print(e)
-                continue
-                
-            feedback = Panel("Back online!", style="bold green", border_style="bold green")
-            reconnecting = False
-            globals().update(ROOM_WORKS=True)
-        console.print(feedback)
 
 
 def get_room_data():
@@ -144,10 +120,40 @@ async def console_loop(user=None):
         
         wait = True
         while wait:
-            if not ROOM_WORKS: # Check if connection was lost to reconnect if it was.
-                await asyncio.sleep(3)
-                await sio.emit("join_room", {"username": user.username, "room_name": name})
-                globals().update(ROOM_WORKS=True)
+            if not ROOM_WORKS: # Check if connection was lost to reconnect if it was try to reconnect.
+                console.print(Panel("Your connection was lost.", style="bold yellow", border_style="bold yellow"))
+                console.print(Panel("Reconnecting...", style="bold yellow", border_style="bold yellow"))
+
+
+                loop_count = 0 # Store loop-count to cancel reconnect if it exceeds time-limit.
+                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                back_online = False
+                
+                reconnecting = True
+                while reconnecting:
+                    await asyncio.sleep(1)
+                
+                    loop_count += 1
+                    if loop_count == 11:
+                        break
+
+                    try:
+                        await sio.emit("join_room", {"username": user.username, "room_name": name})
+                    except Exception as e:
+                        print(e)
+                        continue
+                
+                    feedback = Panel("Back online!", style="bold green", border_style="bold green")
+                    reconnecting = False
+                    back_online = True
+                    globals().update(ROOM_WORKS=True)
+                console.print(feedback)
+
+                if back_online:
+                    clear()
+                    console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
+
             
             if keyboard.is_pressed("alt gr+space"):
                 event = "msg"

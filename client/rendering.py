@@ -286,4 +286,14 @@ def render_chat_rooms(rows: list, hover_on: int) -> Text:
 def prompt(user):
     console = Console()
     console.print(render_menu_screen(get_message_box_rows([""], user)))
-    return Prompt.ask("Send a message")
+    accepted = False
+    while not accepted:
+        a = Prompt.ask("Send a message")
+        if a == "":
+            console.print("[red]Can not send empty message[/]")
+            continue
+        if len(a) > 32*8:
+            console.print("[red]Can not send message with more than {} characters.[/]".format(str(32*8)))
+        accepted = True
+    clear()
+    return a
