@@ -106,6 +106,8 @@ async def console_loop(user=None):
     cancel_render = False
     while True:
         if not ROOM_WORKS:
+            print("RECONNECTING...")
+            await asyncio.sleep(3)
             await sio.emit("join_room", {"username": user.username, "room_name": name})
             globals().update(ROOM_WORKS=True)
             print("RECONNECT")
@@ -117,6 +119,8 @@ async def console_loop(user=None):
         wait = True
         while wait:
             if not ROOM_WORKS:
+                print("RECONNECTING...")
+                await asyncio.sleep(3)
                 await sio.emit("join_room", {"username": user.username, "room_name": name})
                 globals().update(ROOM_WORKS=True)
                 print("RECONNECT")
@@ -148,6 +152,7 @@ async def console_loop(user=None):
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
             cancel_render = True
         if event == "return":
+            await sio.emit("leave_room", {"username": user.username, "room_name": name})
             return await console_loop(user)
 
 if __name__ == "__main__":
