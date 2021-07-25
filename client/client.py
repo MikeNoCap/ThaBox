@@ -18,10 +18,12 @@ class MessagePromptStop(Exception):
 
 sio = socketio.AsyncClient(request_timeout=30)
 
-STARTUP = True
-
 console = Console()
+
+
 CONNECTED: bool = False
+SERVER_ADDRESS = "http://thabox.asmul.net:8000"
+
 USERNAME = ""
 ROOM = ""
 ROOMS: list = []
@@ -63,7 +65,7 @@ async def get_user_data(username):
             success = True
         except socketio.exceptions.BadNamespaceError:
             try:
-                await sio.connect("http://localhost:8000")
+                await sio.connect(SERVER_ADDRESS)
             except socketio.exceptions.ConnectionError:
                 feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
@@ -91,7 +93,7 @@ async def save_user(username, password, pref_dict):
             success = True
         except socketio.exceptions.BadNamespaceError:
             try:
-                await sio.connect("http://localhost:8000")
+                await sio.connect(SERVER_ADDRESS)
             except socketio.exceptions.ConnectionError:
                 feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
@@ -129,10 +131,11 @@ async def receive_message(data):
 async def main():
     console.print(Panel("Starting connection...", style="bold yellow", border_style="bold yellow"))
     try:
-        await sio.connect("http://localhost:8000")#await sio.connect('http://thabox.asmul.net:8000')
+        await sio.connect(SERVER_ADDRESS)
     except socketio.exceptions.ConnectionError as e:
         feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
         console.print(feedback)
+        exit()
 
     console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
