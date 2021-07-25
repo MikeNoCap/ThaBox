@@ -13,11 +13,12 @@ from rich.prompt import Prompt
 from utils import clear, User, Preferences
 import time
 import random
+import asyncio
 
 client_user = None
 
 
-def get_index_duplicates(lst, item) -> list:
+async def get_index_duplicates(lst, item) -> list:
     """
     :param lst: The list to search for an item or items in.
     :param item: The item to find indexes for in list.
@@ -58,7 +59,7 @@ box_logo_lines = [
 menu_logo = "".join([x + "\n" if x != box_logo_lines[-1] else x for x in box_logo_lines])
 
 
-def render_menu_screen(rows: list) -> Text:
+async def render_menu_screen(rows: list) -> Text:
     """
     This function gets the Text-object that is shown to the user once in the main_menu or while in a box.
 
@@ -82,7 +83,7 @@ def render_menu_screen(rows: list) -> Text:
     return Text.assemble(*new_rows)
 
 
-def get_message_box_rows(message_box: list, user: User) -> list:
+async def get_message_box_rows(message_box: list, user: User) -> list:
     message_box = [_ + "".join([" " for i in range(90 - len(_))]) for _ in message_box]
 
     while len(message_box) != 26:
@@ -108,7 +109,7 @@ def get_message_box_rows(message_box: list, user: User) -> list:
     return new_rows
 
 
-def get_message_box(msg_sender: User, message: str, stage: int) -> list:
+async def get_message_box(msg_sender: User, message: str, stage: int) -> list:
     """Returns a list of strings which together assemble the message box that is being displayed in render_message."""
 
     name_color = msg_sender.preferences.preference_dict["Name Colour"]
@@ -155,12 +156,12 @@ def get_message_box(msg_sender: User, message: str, stage: int) -> list:
             list_username = list(msg_sender.username)
             list_line = list(i)
             if list_line.count("│") - list_username.count("│") == 2:  # Ignore │ in usernames.
-                indexes = get_index_duplicates(list_line, "│")
+                indexes = (await get_index_duplicates(list_line, "│"))
                 list_line[indexes[0]] = f"[{border_color}]│[/][{name_color}]"
                 list_line[indexes[-1]] = f"[/][{border_color}]│[/]"
                 new.append(Text.from_markup("".join(list_line)))
             if list_line.count("│") - list_username.count("│") == 1:
-                indexes = get_index_duplicates(list_line, "│")
+                indexes = (await get_index_duplicates(list_line, "│"))
                 list_line[indexes[-1]] = f"[/][{border_color}]│[/]"
                 list_line.insert(0, f"[{name_color}]")
                 new.append(Text.from_markup("".join(list_line)))
@@ -169,14 +170,14 @@ def get_message_box(msg_sender: User, message: str, stage: int) -> list:
             list_line = list(i)
             current_msg_line = list(message_lines[c - 5])
             if list_line.count("│") - current_msg_line.count("│") == 2:  # Ignore │ in usernames.
-                indexes = get_index_duplicates(list_line, "│")
+                indexes = (await get_index_duplicates(list_line, "│"))
 
                 list_line[indexes[0]] = f"[{border_color}]│[/][{message_color}]"
                 list_line[indexes[-1]] = f"[/][{border_color}]│[/]"
 
                 new.append(Text.from_markup("".join(list_line)))
             if list_line.count("│") - current_msg_line.count("│") == 1:
-                indexes = get_index_duplicates(list_line, "│")
+                indexes = (await get_index_duplicates(list_line, "│"))
 
                 if stage == 1:
                     list_line[0] = f"[{border_color}]│[/]"
@@ -189,15 +190,15 @@ def get_message_box(msg_sender: User, message: str, stage: int) -> list:
         if c - 4 > len(message_lines):
             list_line = list(i)
             if "└" in list_line and "┘" in list_line:
-                indexleft = get_index_duplicates(list_line, "└")[0]
-                indexright = get_index_duplicates(list_line, "┘")[0]
+                indexleft = (await get_index_duplicates(list_line, "└"))[0]
+                indexright = (await get_index_duplicates(list_line, "┘"))[0]
 
                 list_line[indexleft] = f"[{border_color}]└"
                 list_line[indexright] = f"┘[/]"
                 new.append(Text.from_markup("".join(list_line)))
 
             if "┘" in list_line and not "└" in list_line:
-                index = get_index_duplicates(list_line, "┘")[0]
+                index = (await get_index_duplicates(list_line, "┘"))[0]
 
                 if stage == 1:
                     list_line[index] = f"[{border_color}]┘[/]"
@@ -210,53 +211,53 @@ def get_message_box(msg_sender: User, message: str, stage: int) -> list:
     return new
 
 
-def render_message(message: str, user: User, message_show_time: int = 6, live=Live()) -> Text:
+async def render_message(message: str, user: User, message_show_time: int = 6, live=Live()) -> Text:
     fade_left_frames = []
     for _ in range(0, 63):
-        message_box = get_message_box(user, message, _)
-        frame = render_menu_screen(get_message_box_rows(message_box, user))
+        message_box = (await get_message_box(user, message, _))
+        frame = (await render_menu_screen(await get_message_box_rows(message_box, user)))
         fade_left_frames.append(frame)
 
-    going_down_box = get_message_box(user, message, 62)
+    going_down_box = (await get_message_box(user, message, 62))
     going_down_frames = []
 
     message_size = len(going_down_box)
 
     for i in range(26 - message_size):
         going_down_box.insert(0, "".join([" " for ___ in range(90)]))
-        going_down_frames.append(render_menu_screen(get_message_box_rows(going_down_box, user)))
+        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user)))
     for i in range(message_size):
         going_down_box.insert(0, "".join([" " for ___ in range(90)]))
         going_down_box.pop(-1)
-        going_down_frames.append(render_menu_screen(get_message_box_rows(going_down_box, user)))
+        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user)))
 
     for i in fade_left_frames:
         live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
-        time.sleep(0.05)
+        await asyncio.sleep(0.05)
 
-    time.sleep(message_show_time)
+    await asyncio.sleep(message_show_time)
 
     for i in going_down_frames:
         live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
-        time.sleep(0.07)
+        await asyncio.sleep(0.07)
 
     return live
 
 
-def message_demo(user: User):
+async def message_demo(user: User):
     global client_user
     client_user = user
     console = Console()
     while True:
         with Live("") as live:
             live.update(
-                render_menu_screen(get_message_box_rows(["".join(" " for i in range(90)) for j in range(26)], user)))
+                await render_menu_screen(await get_message_box_rows(["".join(" " for i in range(90)) for j in range(26)], user)))
             mes = "This is a demo message..."
-            live = render_message(mes, user, live=live)
-            time.sleep(100)
+            live = await render_message(mes, user, live=live)
+            await asyncio.sleep(100)
 
 
-def render_chat_rooms(rows: list, hover_on: int) -> Text:
+async def render_chat_rooms(rows: list, hover_on: int) -> Text:
     """
     This function gets the Text-object that is shown to the user once in the main_menu or while in a box.
 
@@ -283,9 +284,9 @@ def render_chat_rooms(rows: list, hover_on: int) -> Text:
     return Text.assemble(*new_rows)
 
 
-def prompt(user):
+async def prompt(user):
     console = Console()
-    console.print(render_menu_screen(get_message_box_rows([""], user)))
+    console.print(await render_menu_screen(await get_message_box_rows([""], user)))
     accepted = False
     while not accepted:
         a = Prompt.ask("Send a message")
