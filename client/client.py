@@ -16,15 +16,21 @@ class MessagePromptStop(Exception):
     pass
 
 
-sio = socketio.AsyncClient()
+sio = socketio.AsyncClient(request_timeout=30)
+
+STARTUP = True
+
 console = Console()
 CONNECTED: bool = False
 USERNAME = ""
 ROOM = ""
 ROOMS: list = []
 ROOM_WORKS : bool = False
+WAIT_FOR_INFO = False
+LOGIN_DATA = 0
 
 messages_to_show: list = []
+
 
 
 async def exit_client():
@@ -40,6 +46,57 @@ async def get_rooms():
     await sio.emit("get_rooms", callback=set_rooms)
 
 
+@sio.event
+def set_user_data(data):
+    if data["sid"] != sio.sid:
+        return
+    globals().update(LOGIN_DATA=data["info"])
+    globals().update(WAIT_FOR_INFO=False)
+
+
+async def get_user_data(username):
+    globals().update(WAIT_FOR_INFO=True)
+    success = False
+    while not success:    
+        try:
+            await sio.emit("get_user_data", {"to_access": username, "sid": sio.sid})
+            success = True
+        except socketio.exceptions.BadNamespaceError:
+            try:
+                await sio.connect("http://localhost:8000")
+            except socketio.exceptions.ConnectionError:
+                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                console.print(feedback)
+            continue
+
+            
+    
+    while True:
+        await asyncio.sleep(0.3)
+        global WAIT_FOR_INFO
+        if not WAIT_FOR_INFO:
+            break
+    global LOGIN_DATA
+    info = LOGIN_DATA
+    globals().update(LOGIN_DATA=0)
+    return info
+
+
+async def save_user(username, password, pref_dict):
+    success = False
+    while not success:
+        await asyncio.sleep(0.1)
+        try:
+            await sio.emit("save_user", {"username": username, "password": password, "pref_dict": pref_dict})
+            success = True
+        except socketio.exceptions.BadNamespaceError:
+            try:
+                await sio.connect("http://localhost:8000")
+            except socketio.exceptions.ConnectionError:
+                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                console.print(feedback)
+            continue
+    
 
 
 def get_room_data():
@@ -48,7 +105,6 @@ def get_room_data():
 
 @sio.event
 async def connect():
-    console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     globals().update(CONNECTED=True)
 
 
@@ -73,13 +129,14 @@ async def receive_message(data):
 async def main():
     console.print(Panel("Starting connection...", style="bold yellow", border_style="bold yellow"))
     try:
-        await sio.connect('http://thabox.asmul.net:8000')
-    except ConnectionError as e:
-        print("[CLIENT]: could not connect to server, please restart the application.")
+        await sio.connect("http://localhost:8000")#await sio.connect('http://thabox.asmul.net:8000')
+    except socketio.exceptions.ConnectionError as e:
+        feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+        console.print(feedback)
 
-    
+    console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
-    await asyncio.sleep(3)
+    await asyncio.sleep(2)
     await console_loop()
 
 
@@ -91,9 +148,9 @@ async def console_loop(user=None):
     global messages_to_show
     
     if user is None:
-        user = main_navigation.main_menu(logged_in=False, logged_in_as=None)
+        user = await main_navigation.main_menu(logged_in=False, logged_in_as=None)
     if user is not None:
-        user = main_navigation.main_menu(logged_in=True, logged_in_as=user)
+        user = await main_navigation.main_menu(logged_in=True, logged_in_as=user)
     globals().update(USERNAME=user.username)
 
     console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
@@ -110,7 +167,7 @@ async def console_loop(user=None):
     cancel_render = False
     while True:
         if not cancel_render:
-            console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+            console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
             console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
         else:
             cancel_render = False
@@ -149,7 +206,7 @@ async def console_loop(user=None):
 
                 if back_online:
                     clear()
-                    console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+                    console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
                     console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
 
             
@@ -167,16 +224,16 @@ async def console_loop(user=None):
                     index_of_i += 1
                     with Live("", refresh_per_second=14) as live:
                         render_user = User(i[0], "NotImportant", preferences=user.preferences)
-                        rendering.render_message(i[1], render_user, live=live)
+                        await rendering.render_message(i[1], render_user, live=live)
                         messages_to_show.pop(index_of_i)
                 clear()
-                console.print(rendering.render_menu_screen(rendering.get_message_box_rows([], user)))
+                console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
                 console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
                 
             await asyncio.sleep(0.2)
         if event == "msg":
             clear()
-            message = rendering.prompt(user)
+            message = await rendering.prompt(user)
             await asyncio.sleep(0.01)
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
             cancel_render = True

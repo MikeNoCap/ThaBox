@@ -1,7 +1,30 @@
 # Server
 import socketio
+import sqlite3 as sqlite
+from os import path
 
-sio = socketio.AsyncServer(async_mode="asgi", ping_interval=16, ping_timeout=4294967)
+
+
+# Configure database...
+if not path.exists("users.db"):
+    conn = sqlite.connect('users.db')
+    cur = conn.cursor()
+
+    print("Database not found in current directory. Setting up new one...")
+    conn.execute("""CREATE TABLE users(
+    username varchar(255),
+    password varchar(255),
+    NameColour varchar(255),
+    MessageColour varchar(255),
+    BorderColour varchar(255),
+    MessageBorderColour varchar(255));""")
+    conn.commit()
+else:
+    conn = sqlite.connect('users.db')
+    cur = conn.cursor()
+
+# Configure server app
+sio = socketio.AsyncServer(async_mode="asgi", ping_interval=30, ping_timeout=4294967)
 app = socketio.ASGIApp(sio)
 
 
@@ -67,3 +90,28 @@ async def keep_alive(sid):
     return "OK"
 
 
+@sio.event
+async def save_user(sid, data):
+    username, password, pref_dict = data["username"], data["password"], data["pref_dict"]
+    print(username, password, pref_dict)   
+    global cur, conn
+    cur.execute("INSERT INTO users VALUES" \
+     "(:username, :password, :NameColour, :MessageColour, :BorderColour, :MessageBorderColour)",
+     {
+         "username": username,
+         "password": password,
+         "NameColour": pref_dict["Name Colour"],
+         "MessageColour": pref_dict["Message Colour"], 
+         "BorderColour": pref_dict["Border Colour"],
+         "MessageBorderColour" : pref_dict["Message Border Colour"]
+         })
+    conn.commit()
+
+
+@sio.event
+async def get_user_data(sid, data):
+    cur.execute(f"""SELECT * FROM users WHERE username=\"{data["to_access"]}\" LIMIT 1;""")
+    a = cur.fetchone()
+    conn.commit()
+    await sio.emit("set_user_data", {"info": a, "sid": data["sid"]})
+    

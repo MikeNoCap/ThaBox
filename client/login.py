@@ -10,7 +10,8 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 from utils import Preferences, User, clear
-
+from client import get_user_data, save_user
+import asyncio
 try:
     with open("secrets.pkl", "rb") as fp:
         secrets = pickle.load(fp)
@@ -41,49 +42,46 @@ def hash_pass(passwrd: str):
     return add_salt(hashed)
 
 
-def create_account(username: str, password: str):
-    global secrets
+async def create_account(username: str, password: str):
     password = hash_pass(password)
-    secrets.append(User(username=username, paswrd=password, preferences=Preferences()))
-    with open("secrets.pkl", "wb") as f:
-        pickle.dump(secrets, f)
-
-    user_ob = [x for x in secrets if x.username == username][0]
+    prefs = Preferences()
+    user_ob = User(username=username, paswrd=password, preferences=prefs)
+    await save_user(username, password, prefs.preference_dict)
     return user_ob
 
 
-def sign_up():
+async def sign_up():
     global secrets
     progress_visual = []
-
     username_status = "working"
     while username_status != "ready":
         clear()
         console.print(Panel(Text.assemble(("Enter a username", "bold purple")),
                             style="bold purple", border_style="bold purple"))
 
-        usernames_taken = [x.username for x in secrets]
         username = Prompt.ask(Text.assemble(("╰→", "bold red")))
+        console.print("Checking username...", style="bold yellow")
+        data = await get_user_data(username)
 
-        if username in usernames_taken:
+        if data is not None:
             clear()
             console.print(Panel(Text.assemble(("Username already taken", "bold purple")),
                                 style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if " " in username:
             clear()
             console.print(Panel(Text.assemble(("Can not have space in username", "bold purple")),
                                 style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if len(username) < 4:
             clear()
             console.print(Panel(Text.assemble(("Username must be at least 4 characters long",
                                                "bold purple")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
 
@@ -101,55 +99,56 @@ def sign_up():
         console.print(Panel(Text.assemble(("Enter a password (1)", "bold cyan")),
                             style="bold cyan", border_style="bold cyan"))
         password = Prompt.ask(Text.assemble(("╰→", "bold red")), password=True)
-
+        console.print("Checking password...", style="bold yellow")
+        await asyncio.sleep(0.3)
         # Checks
         if " " in password:
             clear()
             console.print(Panel(Text.assemble(("Can not have space in password", "bold cyan")),
                                 style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if len(password) < 8:
             clear()
             console.print(Panel(Text.assemble(("Password must be at least 8 characters long",
                                                "bold cyan")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if len(password) > 32:
             clear()
             console.print(Panel(Text.assemble(("Password can not be any longer than 32 characters",
                                                "bold cyan")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if not re.search("[a-z]", password):
             clear()
             console.print(Panel(Text.assemble(("Password must contain at least one lowercase character",
                                                "bold cyan")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if not re.search("[A-Z]", password):
             clear()
             console.print(Panel(Text.assemble(("Password must contain at least one uppercase character",
                                                "bold cyan")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if not re.search("[A-Z]", password):
             clear()
             console.print(Panel(Text.assemble(("Password must contain at least one uppercase character",
                                                "bold cyan")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         if not re.search("[0-9]", password):
             clear()
             console.print(Panel(Text.assemble(("Password must contain at least one digit", "bold cyan")),
                                 style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
         for i in password:
@@ -157,9 +156,15 @@ def sign_up():
                 clear()
                 console.print(Panel(Text.assemble(("Password can only contain letters from the ASCII table",
                                                    "bold cyan")), style="bold red", border_style="bold red"))
-                time.sleep(2.1)
+                await asyncio.sleep(2.1)
                 clear()
                 continue
+        clear()
+        for i in progress_visual:
+            console.print(i)
+        console.print(Panel(Text.assemble(("Enter a password (1)", "bold cyan")),
+                            style="bold cyan", border_style="bold cyan"))
+        console.print(Text.assemble(("╰→", "bold red")))
 
         console.print(Panel(Text.assemble(("Repeat password (2)", "bold cyan")),
                             style="bold cyan", border_style="bold cyan"))
@@ -169,7 +174,7 @@ def sign_up():
             clear()
             console.print(Panel(Text.assemble(("Passwords did not match", "bold cyan")),
                                 style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             clear()
             continue
 
@@ -181,15 +186,15 @@ def sign_up():
     for i in progress_visual:
         console.print(i)
 
-    a = create_account(username, password2)
+    a = await create_account(username, password2)
 
     console.print(Panel(Text.assemble(("Successfully created an account!")), style="bold green", border_style="green"))
-    time.sleep(2.1)
+    await asyncio.sleep(2.1)
     clear()
     return a
 
 
-def log_in():
+async def log_in():
     status = "working"
     while status != "done":
         clear()
@@ -200,35 +205,41 @@ def log_in():
         console.print(Panel(Text.assemble(("Password", "bold purple")), style="bold cyan", border_style="bold cyan"))
         password = Prompt.ask(Text.assemble(("╰→", "bold red")), password=True)
 
-        user_target = [x for x in secrets if x.username == username]
+        user_data = await get_user_data(username)
 
-        if len(user_target) == 0:
+        if user_data is None:
             clear()
             console.print(Panel(Text.assemble(("Invalid username or password. Please try again.",
                                                "bold red")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             continue
 
-        user_target = user_target[0]
-
-        if not sha256(bytes(password, "utf-8")).hexdigest() == remove_salt(user_target.hashed_pass):
+        if not sha256(bytes(password, "utf-8")).hexdigest() == remove_salt(user_data[1]):
             clear()
             console.print(Panel(Text.assemble(("Invalid username or password. Please try again.",
                                                "bold red")), style="bold red", border_style="bold red"))
-            time.sleep(2.1)
+            await asyncio.sleep(2.1)
             continue
         clear()
         console.print(Panel(Text.assemble(("Success! Logged in as " + username + ".", "bold green")),
                             style="bold green", border_style="green"))
-        time.sleep(2.1)
+        await asyncio.sleep(2.1)
         clear()
-        return user_target
+        prefs = Preferences()
+        new_pref_dict = {
+            "Name Colour": user_data[2],
+            "Message Colour": user_data[3],
+            "Border Colour": user_data[4],
+            "Message Border Colour": user_data[5]
+        }
+        prefs.preference_dict = new_pref_dict
+        return User(username, hash_pass(password), prefs)
 
 
-def login():
+async def login():
     choice = utils.make_style_prompt(choices=["Log in", "Sign up"], prompt_msg="Please log-in/sign up:",
                                      main_style="bold purple", frame_border_style="bold cyan", frame_style="bold red")
     if choice == "Log in":
-        return log_in()
+        return await log_in()
     if choice == "Sign up":
-        return sign_up()
+        return await sign_up()

@@ -40,7 +40,7 @@ $$$$$$$  |\$$$$$$  |$$  /\$$\\
 )
 
 
-def main_menu(logged_in: bool = False, logged_in_as=None):
+async def main_menu(logged_in: bool = False, logged_in_as=None):
     clear()
     selected = False
     if logged_in:
@@ -83,7 +83,7 @@ def main_menu(logged_in: bool = False, logged_in_as=None):
         if logged_in:
             rows.insert(0, Text.assemble((logged_in_as_msg, "bold green")))
 
-        console.print(render_menu_screen(rows))
+        console.print(await render_menu_screen(rows))
         if logged_in:
             what_to_do = Prompt.ask(Text.assemble(("1: Scroll up\n", "bold cyan"), ("2: Scroll down\n", "bold cyan"),
                                                   ("3: Select\n", "bold purple"), ("out: Log out\n", "bold red")),
@@ -107,9 +107,6 @@ def main_menu(logged_in: bool = False, logged_in_as=None):
                     try:
                         clear()
                         return logged_in_as  # Create/join box
-                        hover_on = 1
-                        clear()
-                        continue
                     except GoBack:
                         hover_on = 1
                         clear()
@@ -153,7 +150,7 @@ def main_menu(logged_in: bool = False, logged_in_as=None):
 
             if hover_on == 1:
                 clear()
-                return main_menu(logged_in=True, logged_in_as=login.login())
+                return await main_menu(logged_in=True, logged_in_as=await login.login())
             elif hover_on == 2:
                 try:
                     clear()
@@ -180,10 +177,9 @@ def main_menu(logged_in: bool = False, logged_in_as=None):
                 clear()
                 exit()  # Exit, not even implemented yet lol
         if what_to_do == "out":
-            return main_menu(logged_in=False, logged_in_as=None)
+            return await main_menu(logged_in=False, logged_in_as=None)
 
         clear()
 
 
-if __name__ == '__main__':
-    main_menu()
+

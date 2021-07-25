@@ -6,11 +6,12 @@ from rich import print
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.align import Align
+import asyncio
 
 console = Console()
 
 
-def help_navigation(currentpage, user):
+async def help_navigation(currentpage, user):
     """
     Allows user to cycle through the help pages.
     """
@@ -34,48 +35,48 @@ def help_navigation(currentpage, user):
         "\n[bold white][bold red]![/]   Use [bold magenta] right arrow[/] or [bold magenta]left arrow[/] to navigate the page, or press [bold magenta]BACKSPACE[/] to return to Menu.[/]")
 
     # Adding delays between key presses so that the pages won't cyle through too fast.
-    time.sleep(0.2)
+    await asyncio.sleep(0.2)
 
     while True:
         if keyboard.is_pressed("left_arrow"):
             if previous == "About":
-                help_start_page(user)
+                await help_start_page(user)
                 break
 
             elif previous == "Boxes":
-                help_boxes(user)
+                await help_boxes(user)
                 break
 
             elif previous == "Messages":
-                help_messages(user)
+                await help_messages(user)
                 break
 
             elif previous == "Pref":
-                help_preference(user)
+                await help_preference(user)
                 break
 
         elif keyboard.is_pressed("right_arrow"):
             if next == "About":
-                help_start_page(user)
+                await help_start_page(user)
                 break
 
             elif next == "Boxes":
-                help_boxes(user)
+                await help_boxes(user)
                 break
 
             elif next == "Messages":
-                help_messages(user)
+                await help_messages(user)
                 break
 
             elif next == "Pref":
-                help_preference(user)
+                await help_preference(user)
                 break
 
         elif keyboard.is_pressed("backspace"):
             raise GoBack
 
 
-def help_start_page(user):
+async def help_start_page(user):
     if user is not None:
         main_style = user.preferences.preference_dict["Border Colour"]
     else:
@@ -102,10 +103,10 @@ def help_start_page(user):
     ▄▀█ █▄▄ █▀█ █ █ ▀█▀
     █▀█ █▄█ █▄█ █▄█  █ [/]\n""", align="center", )))
     console.print((Align(paragraph, align="center")))
-    help_navigation('About', user)
+    await help_navigation('About', user)
 
 
-def help_boxes(user):
+async def help_boxes(user):
     if user is not None:
         main_style = user.preferences.preference_dict["Border Colour"]
     else:
@@ -127,10 +128,10 @@ def help_boxes(user):
      █▄▄ █▀█ ▀▄▀ █▀▀ █▀
      █▄█ █▄█ █ █ ██▄ ▄█[/]\n""", align="center", )))
     console.print((Align(paragraph, align="center")))
-    help_navigation('Boxes', user)
+    await help_navigation('Boxes', user)
 
 
-def help_messages(user):
+async def help_messages(user):
     if user is not None:
         main_style = user.preferences.preference_dict["Border Colour"]
     else:
@@ -158,10 +159,10 @@ def help_messages(user):
     █▀▄▀█ █▀▀ █▀ █▀ ▄▀█ █▀▀ █▀▀ █▀
     █ ▀ █ ██▄ ▄█ ▄█ █▀█ █▄█ ██▄ ▄█[/]\n""", align="center", )))
     console.print((Align(paragraph, align="center")))
-    help_navigation("Messages", user)
+    await help_navigation("Messages", user)
 
 
-def help_preference(user):
+async def help_preference(user):
     if user is not None:
         main_style = user.preferences.preference_dict["Border Colour"]
     else:
@@ -181,5 +182,5 @@ def help_preference(user):
     █▀█ █▀█ █▀▀ █▀▀ █▀▀ █▀█ █▀▀ █▄ █ █▀▀ █▀▀ █▀
     █▀▀ █▀▄ ██▄ █▀  ██▄ █▀▄ ██▄ █ ▀█ █▄▄ ██▄ ▄█[/]\n""", align="center", )))
     console.print((Align(paragraph, align="center")))
-    help_navigation("Pref", user)
+    await help_navigation("Pref", user)
 
