@@ -11,6 +11,7 @@ from rich.text import Text
 from rich.live import Live
 from utils import clear, User
 import sys
+#from playsound import playsound
 
 class MessagePromptStop(Exception):
     pass
