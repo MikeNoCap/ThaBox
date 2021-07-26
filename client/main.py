@@ -10,6 +10,7 @@ from rendering import render_menu_screen, message_demo
 import login
 import credits
 import help as help_page
+from client import update_user
 
 console = Console()
 
@@ -115,6 +116,7 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                     try:
                         clear()
                         logged_in_as.preferences.settings()  # Preferences
+                        await update_user(logged_in_as)
                         hover_on = 1
                         clear()
                         continue

@@ -22,7 +22,7 @@ console = Console()
 
 
 CONNECTED: bool = False
-SERVER_ADDRESS = "http://thabox.asmul.net:8000"
+SERVER_ADDRESS = ("http://localhost:8000", "http://thabox.asmul.net:8000")[1]
 
 USERNAME = ""
 ROOM = ""
@@ -56,6 +56,26 @@ def set_user_data(data):
     globals().update(WAIT_FOR_INFO=False)
 
 
+async def update_user(user: User):
+    prefs = user.preferences.preference_dict
+    username = user.username
+    password = user.hashed_pass
+    
+    success = False
+    while not success:    
+        try:
+            await sio.emit("update_user", {"username": username, "passwrd": password, "prefs": prefs})
+            success = True
+        except socketio.exceptions.BadNamespaceError:
+            try:
+                await sio.connect(SERVER_ADDRESS)
+            except socketio.exceptions.ConnectionError:
+                feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                console.print(feedback)
+            continue
+
+
+
 async def get_user_data(username):
     globals().update(WAIT_FOR_INFO=True)
     success = False
@@ -67,14 +87,14 @@ async def get_user_data(username):
             try:
                 await sio.connect(SERVER_ADDRESS)
             except socketio.exceptions.ConnectionError:
-                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
             continue
 
             
     
     while True:
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.7)
         global WAIT_FOR_INFO
         if not WAIT_FOR_INFO:
             break
@@ -95,7 +115,7 @@ async def save_user(username, password, pref_dict):
             try:
                 await sio.connect(SERVER_ADDRESS)
             except socketio.exceptions.ConnectionError:
-                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
             continue
     
@@ -133,7 +153,7 @@ async def main():
     try:
         await sio.connect(SERVER_ADDRESS)
     except socketio.exceptions.ConnectionError as e:
-        feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+        feedback = Panel("Could not connect to server. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
         console.print(feedback)
         exit()
 
@@ -238,6 +258,40 @@ async def console_loop(user=None):
             clear()
             message = await rendering.prompt(user)
             await asyncio.sleep(0.01)
+            if not ROOM_WORKS: # Check if connection was lost to reconnect if it was try to reconnect.
+                console.print(Panel("Your connection was lost.", style="bold yellow", border_style="bold yellow"))
+                console.print(Panel("Reconnecting...", style="bold yellow", border_style="bold yellow"))
+
+
+                loop_count = 0 # Store loop-count to cancel reconnect if it exceeds time-limit.
+                feedback = Panel("Could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
+                back_online = False
+                
+                reconnecting = True
+                while reconnecting:
+                    await asyncio.sleep(1)
+                
+                    loop_count += 1
+                    if loop_count == 11:
+                        break
+
+                    try:
+                        await sio.emit("join_room", {"username": user.username, "room_name": name})
+                    except Exception as e:
+                        print(e)
+                        continue
+                
+                    feedback = Panel("Back online!", style="bold green", border_style="bold green")
+                    reconnecting = False
+                    back_online = True
+                    globals().update(ROOM_WORKS=True)
+                console.print(feedback)
+
+                if back_online:
+                    clear()
+                    console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
+                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
+                    
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
             cancel_render = True
         if event == "return":

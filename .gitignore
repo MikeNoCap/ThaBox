@@ -32,3 +32,5 @@ build/
 
 # Project
 *.pkl
+*.db
+# db stores password information, must not be shared

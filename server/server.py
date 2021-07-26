@@ -114,4 +114,22 @@ async def get_user_data(sid, data):
     a = cur.fetchone()
     conn.commit()
     await sio.emit("set_user_data", {"info": a, "sid": data["sid"]})
+
+
+@sio.event
+async def update_user(sid, data):
+    global cur, conn
+    print(data)
+    username, password, prefs = data["username"], data["passwrd"], data["prefs"]
+    cur.execute("REPLACE INTO users SET" \
+     "(:username, :password, :NameColour, :MessageColour, :BorderColour, :MessageBorderColour)",
+     {
+         "username": username,
+         "password": password,
+         "NameColour": prefs["Name Colour"],
+         "MessageColour": prefs["Message Colour"], 
+         "BorderColour": prefs["Border Colour"],
+         "MessageBorderColour" : prefs["Message Border Colour"]
+         })
+    conn.commit()
     
