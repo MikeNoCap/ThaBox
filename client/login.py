@@ -205,7 +205,9 @@ async def log_in():
         console.print(Panel(Text.assemble(("Password", "bold purple")), style="bold cyan", border_style="bold cyan"))
         password = Prompt.ask(Text.assemble(("╰→", "bold red")), password=True)
 
+        console.print("Validating login...", style="bold yellow")
         user_data = await get_user_data(username)
+        
 
         if user_data is None:
             clear()
@@ -221,7 +223,7 @@ async def log_in():
             await asyncio.sleep(2.1)
             continue
         clear()
-        console.print(Panel(Text.assemble(("Success! Logged in as " + username + ".", "bold green")),
+        console.print(Panel(Text.assemble(("Success! Logged in as " + username, "bold green")),
                             style="bold green", border_style="green"))
         await asyncio.sleep(2.1)
         clear()

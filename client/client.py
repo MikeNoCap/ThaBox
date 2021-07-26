@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.live import Live
 from utils import clear, User
-
+import sys
 
 class MessagePromptStop(Exception):
     pass
@@ -160,7 +160,7 @@ async def main():
     console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
     await asyncio.sleep(2)
-    await console_loop()
+    return await console_loop()
 
 
 async def ping_server():
@@ -171,11 +171,26 @@ async def console_loop(user=None):
     global messages_to_show
     
     if user is None:
-        user = await main_navigation.main_menu(logged_in=False, logged_in_as=None)
+        action, user = await main_navigation.main_menu(logged_in=False, logged_in_as=None)
     if user is not None:
-        user = await main_navigation.main_menu(logged_in=True, logged_in_as=user)
+        action, user = await main_navigation.main_menu(logged_in=True, logged_in_as=user)
+    
+    if user is not None:
+        await update_user(user)
+    if action == "box":
+        pass
+    elif action == "exit":
+        try:
+            await sio.disconnect()
+        except:
+            pass
+        if user is not None:
+            console.print(Text.assemble(("Hope you had a wonderful time!", user.preferences.preference_dict["Name Colour"])))
+        else:
+            console.print(Text.assemble(("Hope you had a wonderful time!", "bold blue")))
+        return sys.exit(0)
     globals().update(USERNAME=user.username)
-    await update_user(user)
+    
 
     console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
     name = Prompt.ask(Text.assemble(("╰>", user.preferences.preference_dict["Border Colour"])))
@@ -219,7 +234,6 @@ async def console_loop(user=None):
                     try:
                         await sio.emit("join_room", {"username": user.username, "room_name": name})
                     except Exception as e:
-                        print(e)
                         continue
                 
                     feedback = Panel("Back online!", style="bold green", border_style="bold green")
@@ -279,7 +293,6 @@ async def console_loop(user=None):
                     try:
                         await sio.emit("join_room", {"username": user.username, "room_name": name})
                     except Exception as e:
-                        print(e)
                         continue
                 
                     feedback = Panel("Back online!", style="bold green", border_style="bold green")

@@ -42,6 +42,7 @@ $$$$$$$  |\$$$$$$  |$$  /\$$\\
 
 
 async def main_menu(logged_in: bool = False, logged_in_as=None):
+    event = ""
     clear()
     selected = False
     if logged_in:
@@ -70,19 +71,19 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
         rows_temp[hover_on - 1] = Text.assemble(
             (rows_temp[hover_on - 1].center(len("--------------------"), "|"), "bold yellow"))
 
-        rows.append(Text.assemble(("--------------------", "bold blue")))
+        rows.append(Text.assemble(("--------------------", "bold purple" if not logged_in else logged_in_as.preferences.preference_dict["Border Colour"])))
         for i in rows_temp:
             rows.append("")
             rows.append(i)
             rows.append("")
-            rows.append(Text.assemble(("--------------------", "bold blue")))
+            rows.append(Text.assemble(("--------------------", "bold purple" if not logged_in else logged_in_as.preferences.preference_dict["Border Colour"])))
 
         # Fill up unused space.
         while len(rows) < 21:
-            rows.append(Text.assemble(("--------------------", "bold red")))
+            rows.append(Text.assemble(("--------------------", "bold purple" if not logged_in else logged_in_as.preferences.preference_dict["Border Colour"])))
 
         if logged_in:
-            rows.insert(0, Text.assemble((logged_in_as_msg, "bold green")))
+            rows.insert(0, Text.assemble((logged_in_as_msg, "bold purple" if not logged_in else logged_in_as.preferences.preference_dict["Border Colour"])))
 
         console.print(await render_menu_screen(rows))
         if logged_in:
@@ -107,7 +108,8 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                 if hover_on == 1:
                     try:
                         clear()
-                        return logged_in_as  # Create/join box
+                        event = "box"
+                        return event, logged_in_as  # Create/join box
                     except GoBack:
                         hover_on = 1
                         clear()
@@ -147,7 +149,8 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                         continue
                 elif hover_on == 5:
                     clear()
-                    exit()  # Replaced by exit function in client so the socket connection is properly closed.
+                    event = "exit"
+                    return event, logged_in_as  # Replaced by exit function in client so the socket connection is properly closed.
 
             if hover_on == 1:
                 clear()
@@ -176,7 +179,8 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                     continue
             elif hover_on == 4:
                 clear()
-                exit()  # Exit, not even implemented yet lol
+                event = "exit"
+                return event, logged_in_as  # Replaced by exit function in client so the socket connection is properly closed.
         if what_to_do == "out":
             return await main_menu(logged_in=False, logged_in_as=None)
 

@@ -31,7 +31,7 @@ class Preferences:
         self.preference_dict = default_preference = {
             "Name Colour": "bold cyan",
             "Message Colour": "bold white",
-            "Border Colour": "bold green",
+            "Border Colour": "bold purple",
             "Message Border Colour": "bold magenta",
         }
 
@@ -84,13 +84,7 @@ class Preferences:
                         time.sleep(2.2)
                         # update_userfiles()
                         clear()
-
-                        repeat = make_style_prompt(choices=["[green]Yes[/]", "[red]No[/]"],
-                                                   prompt_msg="Would you like to change something else?",
-                                                   main_style=self.preference_dict["Message Border Colour"])
-                        if repeat == "[green]Yes[/]":
-                            break
-                        return self
+                        break
 
 
 class User:
