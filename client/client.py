@@ -175,6 +175,7 @@ async def console_loop(user=None):
     if user is not None:
         user = await main_navigation.main_menu(logged_in=True, logged_in_as=user)
     globals().update(USERNAME=user.username)
+    await update_user(user)
 
     console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
     name = Prompt.ask(Text.assemble(("╰>", user.preferences.preference_dict["Border Colour"])))

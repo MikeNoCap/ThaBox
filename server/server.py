@@ -121,7 +121,8 @@ async def update_user(sid, data):
     global cur, conn
     print(data)
     username, password, prefs = data["username"], data["passwrd"], data["prefs"]
-    cur.execute("REPLACE INTO users SET" \
+    cur.execute(f"""DELETE FROM users WHERE username = '{username}';""")
+    cur.execute("INSERT INTO users VALUES" \
      "(:username, :password, :NameColour, :MessageColour, :BorderColour, :MessageBorderColour)",
      {
          "username": username,
