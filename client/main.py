@@ -151,7 +151,8 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                     clear()
                     event = "exit"
                     return event, logged_in_as  # Replaced by exit function in client so the socket connection is properly closed.
-
+                elif what_to_do == "out":
+                    return await main_menu(logged_in=False, logged_in_as=None)
             if hover_on == 1:
                 clear()
                 return await main_menu(logged_in=True, logged_in_as=await login.login())
@@ -181,8 +182,7 @@ async def main_menu(logged_in: bool = False, logged_in_as=None):
                 clear()
                 event = "exit"
                 return event, logged_in_as  # Replaced by exit function in client so the socket connection is properly closed.
-        if what_to_do == "out":
-            return await main_menu(logged_in=False, logged_in_as=None)
+        
 
         clear()
 

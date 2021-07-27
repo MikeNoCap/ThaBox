@@ -33,6 +33,9 @@ users = []
 rooms = []
 
 
+room_data = {} # {"room_name": list(["room_name", "privacy", "password"])} password is None if privacy is public
+
+
 @sio.event
 async def connect(sid, data):
     print(f"[SERVER]: connect {sid}")
@@ -48,15 +51,27 @@ async def create_room(sid, data):
     global rooms
     print(f"{data['room_owner']} joined to {data['room_name']}")
     room_data = {"room_name": data['room_name'], "private": data["private"], "password": data["password"], "capacity": data["capacity"], "room_owner": data["room_owner"]}
-    rooms.append(room_data)
     sio.enter_room(sid, data['room_name'])
     return room_data
 
 
 @sio.event
 async def join_room(sid, data):
-    print(f"{data['username']} joined to {data['room_name']}")
-    sio.enter_room(sid, data['room_name'])
+    global room_data
+    request_from = data["sid"]
+    if data["room_name"] not in room_data:
+        room_data[data["room_name"]] = [data["room_name"], "public", None]
+        print(f"{data['username']} joined to {data['room_name']}")
+        sio.enter_room(sid, data['room_name'])
+        return
+    info = room_data.get(data["room_name"])
+    if info[1] == "public":
+        sio.enter_room(sid, data['room_name'])
+        print(f"{data['username']} joined to {data['room_name']}")
+        return
+    await sio.emit("password_prompt", {"sid": request_from, "password": info[2]})
+    
+    
 
 
 @sio.event

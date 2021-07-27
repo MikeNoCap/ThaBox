@@ -11,6 +11,7 @@ from rich.text import Text
 from rich.live import Live
 from utils import clear, User
 import sys
+import os
 #from playsound import playsound
 
 class MessagePromptStop(Exception):
@@ -23,7 +24,7 @@ console = Console()
 
 
 CONNECTED: bool = False
-SERVER_ADDRESS = ("http://localhost:8000", "http://thabox.asmul.net:8000")[1]
+SERVER_ADDRESS = ("http://localhost:8000", "http://thabox.asmul.net:8000")[0]
 
 USERNAME = ""
 ROOM = ""
@@ -170,7 +171,8 @@ async def ping_server():
 
 async def console_loop(user=None):
     global messages_to_show
-    
+    clear()
+    await rendering.load_box_animation(None)
     if user is None:
         action, user = await main_navigation.main_menu(logged_in=False, logged_in_as=None)
     if user is not None:
@@ -178,28 +180,28 @@ async def console_loop(user=None):
     
     if user is not None:
         await update_user(user)
-    if action == "box":
-        pass
-    elif action == "exit":
+
+    if action == "exit":
+        if user is not None:
+            await update_user(user)        
+            await asyncio.sleep(1)
+            print("Saving account preferences...")
         try:
             await sio.disconnect()
         except:
             pass
-        if user is not None:
-            console.print(Text.assemble(("Hope you had a wonderful time!", user.preferences.preference_dict["Name Colour"])))
-        else:
-            console.print(Text.assemble(("Hope you had a wonderful time!", "bold blue")))
-        return sys.exit(0)
+        await sio.wait()
+        return
     globals().update(USERNAME=user.username)
     
 
     console.print(Panel("Enter the name of a box to join \nIf the box doesn't exist a new one will be created", style=user.preferences.preference_dict["Border Colour"], border_style=user.preferences.preference_dict["Border Colour"]))
     name = Prompt.ask(Text.assemble(("╰>", user.preferences.preference_dict["Border Colour"])))
     console.print(Panel(f"Joining {name}", style="green", border_style="green"))
-    await sio.emit("join_room", {"username": user.username, "room_name": name})
+    await sio.emit("join_room", {"username": user.username, "room_name": name, "sid": sio.sid})
+    await asyncio.sleep(1)
     globals().update(ROOM=name)
     globals().update(ROOM_WORKS=True)
-    await asyncio.sleep(0.01)
     clear()
         
         
@@ -314,4 +316,9 @@ async def console_loop(user=None):
             return await console_loop(user)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+        os.system("python client\exit.py")
+        sys.exit(1)
+    except RuntimeError:
+        pass

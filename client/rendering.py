@@ -14,6 +14,7 @@ from utils import clear, User, Preferences
 import time
 import random
 import asyncio
+import keyboard
 
 client_user = None
 
@@ -26,6 +27,29 @@ async def get_index_duplicates(lst, item) -> list:
     """
     return [i for i, x in enumerate(lst) if x == item]
 
+
+
+menu_no_color = """╭────────────────────────────────╮
+│                                │
+│ $$$$$$$$\ $$\                  │
+│ \__$$  __|$$ |                 │
+│    $$ |   $$$$$$$\   $$$$$$\   │
+│    $$ |   $$  __$$\  \____$$\  │
+│    $$ |   $$ |  $$ | $$$$$$$ | │
+│    $$ |   $$ |  $$ |$$  __$$ | │
+│    $$ |   $$ |  $$ |\$$$$$$$ | │
+│    \__|   \__|  \__| \_______| │
+│                                │
+│ $$$$$$$\                       │
+│ $$  __$$\                      │
+│ $$ |  $$ | $$$$$$\  $$\   $$\  │
+│ $$$$$$$\ |$$  __$$\ \$$\ $$  | │
+│ $$  __$$\ $$ /  $$ | \$$$$  /  │
+│ $$ |  $$ |$$ |  $$ | $$  $$<   │
+│ $$$$$$$  |\$$$$$$  |$$  /\$$\  │
+│ \_______/  \______/ \__/  \__| │
+│                                │
+╰────────────────────────────────╯"""
 
 # Create the colored logo-text manually because rich's Panel()
 # function does not allow you to get the raw_output (the string that is actually being printed)
@@ -57,6 +81,8 @@ box_logo_lines = [
     RED + "╰────────────────────────────────╯  " + ENDC
 ]
 menu_logo = "".join([x + "\n" if x != box_logo_lines[-1] else x for x in box_logo_lines])
+
+console = Console()
 
 
 async def render_menu_screen(rows: list) -> Text:
@@ -211,6 +237,56 @@ async def get_message_box(msg_sender: User, message: str, stage: int) -> list:
     return new
 
 
+async def load_box_animation(user):
+    string = menu_no_color
+    string_rows = string.split("\n")
+    rows_2D = []
+    for j in range(0, len(string_rows[0])):
+        rows_2D.append([_[j] for _ in string_rows])
+            
+
+    frames = []
+    
+
+    width = 0
+    s = ""
+    rows = []
+
+    for i in rows_2D:
+        width += 1
+        if width == 1:
+            for _ in i:
+                rows.append(_)
+                frames.append("".join(k+"\n" for k in rows))
+
+        else:
+            if width % 2 == 0:
+                for j in list(range(0, len(rows)))[::-1]:
+                    rows[j] += i[j]
+                    frames.append("".join(k+"\n" for k in rows))
+            else:   
+                for j in range(0, len(rows)):
+                    rows[j] += i[j]
+                    frames.append("".join(k+"\n" for k in rows))
+
+        frames.append("".join(k+"\n" for k in rows))
+
+    
+
+    
+    with Live(refresh_per_second=10) as l:
+        for i in frames:
+            l.update(i)
+            await asyncio.sleep(0.000001)
+    clear()
+    for i in range(0, len(rows)):
+        rows[i] = box_logo_lines[i]
+        for _ in rows:
+            print(_)
+        if i != len(rows):
+            clear()    
+    console.print(await render_menu_screen(["" for i in range(21)]))
+
 async def render_message(message: str, user: User, message_show_time: int = 6, live=Live()) -> Text:
     fade_left_frames = []
     for _ in range(0, 63):
@@ -230,16 +306,19 @@ async def render_message(message: str, user: User, message_show_time: int = 6, l
         going_down_box.insert(0, "".join([" " for ___ in range(90)]))
         going_down_box.pop(-1)
         going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user)))
-
+    
+    frame_time_in = 0.05
+    frame_time_out = 0.05
     for i in fade_left_frames:
         live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(frame_time_in)
 
     await asyncio.sleep(message_show_time)
 
     for i in going_down_frames:
         live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
-        await asyncio.sleep(0.07)
+        await asyncio.sleep(frame_time_in)
+        await asyncio.sleep(frame_time_out)
 
     return live
 
@@ -255,7 +334,7 @@ async def message_demo(user: User):
             mes = "This is a demo message..."
             live = await render_message(mes, user, live=live)
             await asyncio.sleep(100)
-
+  
 
 async def render_chat_rooms(rows: list, hover_on: int) -> Text:
     """
@@ -298,3 +377,6 @@ async def prompt(user):
         accepted = True
     clear()
     return a
+
+if __name__ == "__main__":
+    asyncio.run(load_box_animation(None))
