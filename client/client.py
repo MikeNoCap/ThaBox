@@ -24,7 +24,7 @@ console = Console()
 
 
 CONNECTED: bool = False
-SERVER_ADDRESS = ("http://localhost:8000", "http://thabox.asmul.net:8000")[0]
+SERVER_ADDRESS = ("http://localhost:8000", "http://thabox.asmul.net:8000")[1]
 
 USERNAME = ""
 ROOM = ""
