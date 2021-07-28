@@ -145,9 +145,10 @@ async def send_message(sid, data):
 
 @sio.event
 async def receive_message(data):
-    global messages_to_show, ROOM
+    global messages_to_show, ROOM, USERNAME
     if data["room_name"] == ROOM:
-        messages_to_show.append([data["username"], data["message"]])
+        if USERNAME != data["username"]:
+            messages_to_show.append([data["username"], data["message"]])
 
 
 async def main():
@@ -275,7 +276,7 @@ async def console_loop(user=None):
         if event == "msg":
             clear()
             message = await rendering.prompt(user)
-            await asyncio.sleep(0.01)
+            clear()
             if not ROOM_WORKS: # Check if connection was lost to reconnect if it was try to reconnect.
                 console.print(Panel("Your connection was lost.", style="bold yellow", border_style="bold yellow"))
                 console.print(Panel("Reconnecting...", style="bold yellow", border_style="bold yellow"))
@@ -307,12 +308,18 @@ async def console_loop(user=None):
                 if back_online:
                     clear()
                     console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
-                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
-                    
+                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")        
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
+            await asyncio.sleep(0.2)
+            with Live("", refresh_per_second=14) as live:
+                render_user = User(USERNAME, "NotImportant", preferences=user.preferences)
+                await rendering.render_message(message, render_user, live=live)
+                live.update(Text.assemble(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)), ("\nTips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")))
             cancel_render = True
+            
         if event == "return":
             await sio.emit("leave_room", {"username": user.username, "room_name": name})
+            await asyncio.sleep(0.2)
             return await console_loop(user)
 
 if __name__ == "__main__":

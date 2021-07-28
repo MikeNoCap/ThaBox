@@ -375,7 +375,6 @@ async def prompt(user):
         if len(a) > 32*8:
             console.print("[red]Can not send message with more than {} characters.[/]".format(str(32*8)))
         accepted = True
-    clear()
     return a
 
 if __name__ == "__main__":
