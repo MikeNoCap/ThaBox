@@ -4,7 +4,6 @@ from rich.panel import Panel
 from rich.screen import Screen
 from rich.console import Console, RenderGroup
 from rich.align import Align
-import box_interface
 from utils import User, Preferences, GoBack, clear
 from rendering import render_menu_screen, message_demo
 import login
