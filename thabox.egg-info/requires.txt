@@ -1,0 +1,4 @@
+python-socketio-client~=1.1
+keyboard~=0.13
+rich~=10.6
+playsound

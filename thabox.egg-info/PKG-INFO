@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: thabox
+Version: 0.0.3
+Summary: ThaBox is an open-source, terminal-based, retro-modern chat application where clients can connect to chatrooms and talk anonymously.
+Home-page: https://github.com/MikeNoCap/ThaBox
+Author: The Jazzed Jerboas
+Author-email: thorvaldsenmikkel@gmail.com
+License: MIT
+Project-URL: Bug Tracker, https://github.com/MikeNoCap/ThaBox/issues
+Description: # ThaBox
+        
+        ![ThaBox](https://github.com/tomheaton/pcj8-jazzed-jerboas/blob/main/images/ThaBox.png?raw=true)
+        
+        ThaBox is an open-source, terminal-based, retro-modern chat application where clients can connect to chatrooms and talk anonymously.
+        You just create an account and `BOOM`, you now have access to all of ThaBox.
+        
+        
+        
+        ## Authors
+        
+        Team Jazzed Jerboas - tomheaton, MikeNoCap, HiPeople21, TahU28, ryoflux, b-a-b-i-s
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
