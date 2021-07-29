@@ -14,15 +14,6 @@ from utils import Preferences, User, clear
 from client import get_user_data, save_user
 import asyncio
 
-try:
-    with open("secrets.pkl", "rb") as fp:
-        secrets = pickle.load(fp)
-except FileNotFoundError:
-    print("file not found, creating new file")
-    with open("secrets.pkl", "wb") as fp:
-        pickle.dump([], fp)
-        secrets = []
-
 printable_chars = list(string.printable.replace("\n", "").replace(" ", "").replace("    ", ""))
 
 console = Console()
