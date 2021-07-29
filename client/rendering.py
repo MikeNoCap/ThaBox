@@ -159,7 +159,7 @@ async def get_message_box(msg_sender: User, message: str, stage: int) -> list:
     msg_box = \
         f"┌────────────────────────────────┐\n" \
         f"│{'Message from' : ^32}│\n" \
-        f"│{msg_sender.username : ^32}│\n" \
+        f"│{(msg_sender.username) : ^32}│\n" \
         f"├────────────────────────────────┤\n" \
         f"{message_string}\n" \
         f"└────────────────────────────────┘"

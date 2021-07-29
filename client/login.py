@@ -9,9 +9,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
+from rich.markup import escape
 from utils import Preferences, User, clear
 from client import get_user_data, save_user
 import asyncio
+
 try:
     with open("secrets.pkl", "rb") as fp:
         secrets = pickle.load(fp)
@@ -75,6 +77,13 @@ async def sign_up():
             console.print(Panel(Text.assemble(("Can not have space in username", "bold purple")),
                                 style="bold red", border_style="bold red"))
             await asyncio.sleep(2.1)
+            clear()
+            continue
+        if "[" in username or "]" in username:
+            clear()
+            console.print(Panel(Text.assemble(("Username must not contain square-brackets ('[', ']')",
+                                               "bold cyan")), style="bold red", border_style="bold red"))
+            await asyncio.sleep(3.1)
             clear()
             continue
         if len(username) < 4:

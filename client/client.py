@@ -163,6 +163,7 @@ async def main():
     console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
     await asyncio.sleep(2)
+    await rendering.load_box_animation(None)
     return await console_loop()
 
 
@@ -173,7 +174,6 @@ async def ping_server():
 async def console_loop(user=None):
     global messages_to_show
     clear()
-    await rendering.load_box_animation(None)
     if user is None:
         action, user = await main_navigation.main_menu(logged_in=False, logged_in_as=None)
     if user is not None:
