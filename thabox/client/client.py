@@ -322,10 +322,10 @@ async def console_loop(user=None):
             await asyncio.sleep(0.2)
             return await console_loop(user)
 
-if __name__ == "__main__":
+def start():
     try:
         asyncio.run(main())
-        os.system("python client\exit.py")
+        os.system("python ThaBox\client\exit.py")
         sys.exit(1)
     except RuntimeError:
         pass

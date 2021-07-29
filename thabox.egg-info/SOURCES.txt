@@ -1,7 +1,7 @@
 LICENSE
 README.md
+setup.py
 thabox/__init__.py
-thabox/setup.py
 thabox.egg-info/PKG-INFO
 thabox.egg-info/SOURCES.txt
 thabox.egg-info/dependency_links.txt
