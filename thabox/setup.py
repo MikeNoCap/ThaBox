@@ -17,5 +17,5 @@ setuptools.setup(
     },
     license='MIT',
     packages=['thabox'],
-    install_requires=["python-socketio-client~=1.1", "keyboard~=0.13", "rich~=10.6", "playsound"]
+    install_requires=["python-socketio-client~=1.1", "python-socketio~=5.3", "keyboard~=0.13", "rich~=10.6", "playsound"]
 )
