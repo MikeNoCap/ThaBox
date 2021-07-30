@@ -10,11 +10,15 @@ from rich.live import Live
 from rich.markup import escape
 from rich.layout import Layout
 from rich.prompt import Prompt
-from utils import clear, User, Preferences
 import time
 import random
 import asyncio
 import keyboard
+
+try:
+    from utils import clear, User, Preferences
+except ModuleNotFoundError:
+    from thabox.utils import clear, User, Preferences
 
 client_user = None
 

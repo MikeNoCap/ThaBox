@@ -1,12 +1,15 @@
 import keyboard
 import time
-from utils import clear
-from utils import GoBack
 from rich import print
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.align import Align
 import asyncio
+
+try:
+    from utils import clear, GoBack
+except ModuleNotFoundError:
+    from thabox.utils import clear, GoBack
 
 console = Console()
 

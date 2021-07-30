@@ -3,3 +3,4 @@ python-socketio~=5.3
 keyboard~=0.13
 rich~=10.6
 playsound
+uvicorn

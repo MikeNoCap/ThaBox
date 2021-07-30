@@ -4,7 +4,11 @@ from rich.align import Align
 from rich.live import Live
 from rich.panel import Panel
 from rich.text import Text
-from utils import clear, GoBack
+
+try:
+    from utils import clear, GoBack
+except ModuleNotFoundError:
+    from thabox.utils import clear, GoBack
 
 height: list = ['bottom', 'middle', 'top']
 
