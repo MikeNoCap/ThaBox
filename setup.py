@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='thabox',
-    version='0.1.3',
+    version='0.1.4',
     author='The Jazzed Jerboas',
     author_email='thorvaldsenmikkel@gmail.com',
     description="""ThaBox is an open-source, terminal-based, retro-modern chat application where clients can connect to chatrooms and talk anonymously.""",
