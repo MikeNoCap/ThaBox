@@ -113,7 +113,22 @@ async def render_menu_screen(rows: list) -> Text:
     return Text.assemble(*new_rows)
 
 
-async def get_message_box_rows(message_box: list, user: User) -> list:
+async def get_message_box_rows(message_box: list, user: User, message_rendering=False) -> list: # message_rendering is true when messages
+    # are being displayed. This is used to get the appropriate info_message in the box.
+
+
+    border_color = user.preferences.preference_dict["Border Colour"]
+    info_type_color = user.preferences.preference_dict["Name Colour"]
+    info_message_color = user.preferences.preference_dict["Message Border Colour"]
+    if message_rendering:
+        info_text = "|split|You can send messages once messages are done displaying|split|".center(85+14, "─").split("|split|")
+        info_message = Text.assemble((info_text[0], border_color), (info_text[1], "bold cyan on magenta"), (info_text[2], border_color))
+        info_type = Text.assemble(("Info", "bold cyan on magenta"), ("─", border_color))
+    else:
+        info_text = "|split|Hold ctrl+space to type   Hold ctrl+alt to go back to main-menu|split|".center(85+14, "─").split("|split|")
+        info_message = Text.assemble((info_text[0], border_color), (info_text[1], "bold cyan on magenta"), (info_text[2], border_color))
+        info_type = Text.assemble(("Usage", "bold cyan on magenta"))
+    
     message_box = [_ + "".join([" " for i in range(90 - len(_))]) for _ in message_box]
 
     while len(message_box) != 26:
@@ -124,8 +139,6 @@ async def get_message_box_rows(message_box: list, user: User) -> list:
 
     if len(message_box) != 26:
         raise ValueError("Box must contain 26 rows.")
-
-    border_color = user.preferences.preference_dict["Border Colour"]
     new_rows = []
 
     new_rows.append(
@@ -133,8 +146,10 @@ async def get_message_box_rows(message_box: list, user: User) -> list:
                        border_color)))
     for i in message_box:
         new_rows.append(Text.assemble(("│", border_color), i, ("│", border_color)))
+    
+    
     new_rows.append(
-        Text.assemble(("└──────────────────────────────────────────────────────────────────────────────────────────┘",
+        Text.assemble(("└", border_color), info_type, info_message, ("┘",
                        border_color)))
     return new_rows
 
@@ -295,7 +310,7 @@ async def render_message(message: str, user: User, message_show_time: int = 6, l
     fade_left_frames = []
     for _ in range(0, 63):
         message_box = (await get_message_box(user, message, _))
-        frame = (await render_menu_screen(await get_message_box_rows(message_box, user)))
+        frame = (await render_menu_screen(await get_message_box_rows(message_box, user, True)))
         fade_left_frames.append(frame)
 
     going_down_box = (await get_message_box(user, message, 62))
@@ -305,22 +320,22 @@ async def render_message(message: str, user: User, message_show_time: int = 6, l
 
     for i in range(26 - message_size):
         going_down_box.insert(0, "".join([" " for ___ in range(90)]))
-        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user)))
+        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user, True)))
     for i in range(message_size):
         going_down_box.insert(0, "".join([" " for ___ in range(90)]))
         going_down_box.pop(-1)
-        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user)))
+        going_down_frames.append(await render_menu_screen(await get_message_box_rows(going_down_box, user, True)))
     
     frame_time_in = 0.05
     frame_time_out = 0.05
     for i in fade_left_frames:
-        live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
+        live.update(i)
         await asyncio.sleep(frame_time_in)
 
     await asyncio.sleep(message_show_time)
 
     for i in going_down_frames:
-        live.update(Text.assemble(i, ("\nYou can send messages once messages are done displaying...")))
+        live.update(i)
         await asyncio.sleep(frame_time_in)
         await asyncio.sleep(frame_time_out)
 

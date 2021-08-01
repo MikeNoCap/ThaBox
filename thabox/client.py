@@ -11,6 +11,8 @@ import sys
 import os
 import string
 import random
+import time
+import re
 from hashlib import sha256
 
 try:
@@ -51,6 +53,40 @@ def add_salt(hash_no_salt):
     for i in range(9):
         hash_no_salt += random.choice(printable_chars)
     return hash_no_salt
+
+
+def exit_anim():
+    print_string = "[a]Hope[/][b] you[/][a] had[/][b] a[/][a] great[/][b] time![/]"
+    s1 = print_string.replace("[a]", "[cyan]").replace("[b]", "[magenta]")
+    s2 = print_string.replace("[a]", "[magenta]").replace("[b]", "[cyan]")
+
+
+    frames = []
+
+    extra = ""
+    s = ""
+
+    for i in range(30):
+        x = s1 if i % 2 == 0 else s2
+        frames.append(Panel(extra+s+x, height=32, width=90))
+        s += " "
+        extra += "\n"
+    for i in range(30):
+        x = s1 if i % 2 == 0 else s2
+        s+=" "
+        extra = extra[:-1]
+        frames.append(Panel(extra+s+x, height=32, width=90))
+    frames.append(Panel("", height=32, width=90))
+    console = Console()
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+    with Live(refresh_per_second=10) as l:
+        for i in frames:
+            time.sleep(0.15)
+            l.update(i)
+
+    sys.exit(1)
 
 
 def remove_salt(hash_and_salt):
@@ -235,7 +271,6 @@ async def log_in():
 
         console.print("Validating login...", style="bold yellow")
         user_data = await get_user_data(username)
-        
 
         if user_data is None:
             clear()
@@ -302,6 +337,8 @@ async def update_user(user: User):
     password = user.hashed_pass
     
     success = False
+    breakcount = 0
+    breakcount += 1
     while not success:    
         try:
             await sio.emit("update_user", {"username": username, "passwrd": password, "prefs": prefs})
@@ -312,16 +349,26 @@ async def update_user(user: User):
             except socketio.exceptions.ConnectionError:
                 feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
-            continue
+        if breakcount == 80:
+            feedback = Panel("Failed to communicate with server, your newly set preferences will not be saved", style="bold red", border_style="yellow")
+            console.print(feedback)
+            await asyncio.sleep(3)
+            clear()
+            return
+        await asyncio.sleep(0.1)
+        continue
 
 
 
 async def get_user_data(username):
     globals().update(WAIT_FOR_INFO=True)
     success = False
-    while not success:    
+    breakcount = 0
+    while not success:
+        breakcount += 1
         try:
             await sio.emit("get_user_data", {"to_access": username, "sid": sio.sid})
+            await asyncio.sleep(1)
             success = True
         except socketio.exceptions.BadNamespaceError:
             try:
@@ -329,7 +376,14 @@ async def get_user_data(username):
             except socketio.exceptions.ConnectionError:
                 feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
-            continue
+        if breakcount == 80:
+            feedback = Panel("Failed to communicate with server, please try logging in again.", style="bold yellow", border_style="yellow")
+            console.print(feedback)
+            await asyncio.sleep(3)
+            clear()
+            return await login()
+        await asyncio.sleep(0.1)
+        continue
 
             
     
@@ -345,9 +399,10 @@ async def get_user_data(username):
 
 
 async def save_user(username, password, pref_dict):
+    breakcount = 0
     success = False
     while not success:
-        await asyncio.sleep(0.1)
+        breakcount += 1
         try:
             await sio.emit("save_user", {"username": username, "password": password, "pref_dict": pref_dict})
             success = True
@@ -358,6 +413,14 @@ async def save_user(username, password, pref_dict):
                 feedback = Panel("Lost connection and could not reconnect. Please check your internet connection and restart the program.", style="bold red", border_style="bold red")
                 console.print(feedback)
             continue
+        if breakcount == 80:
+            feedback = Panel("Failed to communicate with server, please try signing up again.", style="bold yellow", border_style="yellow")
+            console.print(feedback)
+            await asyncio.sleep(3)
+            clear()
+            return await login()
+        await asyncio.sleep(0.1)
+        continue
     
 
 
@@ -401,7 +464,7 @@ async def main():
     console.print(Panel('Connected!', style="bold green", border_style="bold green"))
     console.print(Panel("Enjoy your stay!", style="bold green", border_style="bold green"))
     await asyncio.sleep(2)
-    await rendering.load_box_animation(None)
+    #await rendering.load_box_animation(None)
     return await console_loop()
 
 
@@ -452,7 +515,6 @@ async def console_loop(user=None):
     while True:
         if not cancel_render:
             console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
-            console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
         else:
             cancel_render = False
 
@@ -477,7 +539,7 @@ async def console_loop(user=None):
                         break
 
                     try:
-                        await sio.emit("join_room", {"username": user.username, "room_name": name})
+                        await sio.emit("join_room", {"username": user.username, "room_name": name, "sid": sio.sid})
                     except Exception as e:
                         continue
                 
@@ -490,13 +552,12 @@ async def console_loop(user=None):
                 if back_online:
                     clear()
                     console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
-                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
 
             
-            if keyboard.is_pressed("alt gr+space"):
+            if keyboard.is_pressed("ctrl+space"):
                 event = "msg"
                 break
-            if keyboard.is_pressed("alt gr+c"):
+            if keyboard.is_pressed("ctrl+alt"):
                 event = "return"
                 break
             global messages_to_show
@@ -511,7 +572,6 @@ async def console_loop(user=None):
                         messages_to_show.pop(index_of_i)
                 clear()
                 console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
-                console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")
                 
             await asyncio.sleep(0.2)
         if event == "msg":
@@ -536,7 +596,7 @@ async def console_loop(user=None):
                         break
 
                     try:
-                        await sio.emit("join_room", {"username": user.username, "room_name": name})
+                        await sio.emit("join_room", {"username": user.username, "room_name": name, "sid": sio.sid})
                     except Exception as e:
                         continue
                 
@@ -545,17 +605,15 @@ async def console_loop(user=None):
                     back_online = True
                     globals().update(ROOM_WORKS=True)
                 console.print(feedback)
-
                 if back_online:
                     clear()
                     console.print(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)))
-                    console.print("Tips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")        
             await sio.emit("send_message", {"username": user.username, "message": message, "room_name": name})
             await asyncio.sleep(0.2)
             with Live("", refresh_per_second=14) as live:
                 render_user = User(USERNAME, "NotImportant", preferences=user.preferences)
                 await rendering.render_message(message, render_user, live=live)
-                live.update(Text.assemble(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)), ("\nTips: Hold AltGr+Space to type, Hold AltGR+C to go back to main-menu.")))
+                live.update(Text.assemble(await rendering.render_menu_screen(await rendering.get_message_box_rows([], user)), ("\nTips: Hold ctrl+space to type, Hold ctrl+alt to go back to main-menu.")))
             cancel_render = True
             
         if event == "return":
@@ -566,8 +624,7 @@ async def console_loop(user=None):
 def start():
     try:
         asyncio.run(main())
-        os.system("python thabox/exit.py")
-        sys.exit(1)
+        exit_anim()
     except RuntimeError:
         pass
 

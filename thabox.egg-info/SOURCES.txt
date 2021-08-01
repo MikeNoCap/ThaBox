@@ -5,7 +5,6 @@ thabox/__init__.py
 thabox/box_interface.py
 thabox/client.py
 thabox/credits.py
-thabox/exit.py
 thabox/help.py
 thabox/login.py
 thabox/main.py

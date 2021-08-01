@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='thabox',
-    version='0.1.0',
+    version='0.1.3',
     author='The Jazzed Jerboas',
     author_email='thorvaldsenmikkel@gmail.com',
     description="""ThaBox is an open-source, terminal-based, retro-modern chat application where clients can connect to chatrooms and talk anonymously.""",
@@ -17,7 +17,7 @@ setuptools.setup(
     },
     license='MIT',
     packages=['thabox'],
-    install_requires=["python-socketio-client~=1.1", "python-socketio~=5.3", "keyboard~=0.13", "rich~=10.6", "playsound", "uvicorn"],
+    install_requires=["python-socketio-client~=1.1", "python-socketio~=5.3", "keyboard~=0.13", "rich~=10.6", "playsound", "uvicorn", "aiohttp"],
     entry_points = {
         'console_scripts': ['thabox=thabox.client:start'],
     }
